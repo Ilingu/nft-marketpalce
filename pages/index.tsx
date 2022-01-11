@@ -17,6 +17,7 @@ import {
   NFTShape,
   UINFTShape,
 } from "../lib/types/interfaces";
+import Head from "next/head";
 
 /* COMPONENT */
 const Home: NextPage = () => {
@@ -48,7 +49,7 @@ const Home: NextPage = () => {
           const price = parseInt(
             ethers.utils.formatUnits(i.price.toString(), "ether")
           );
-  console.log(tokenUri);
+          console.log(tokenUri);
 
           const item: UINFTShape = {
             description: meta.data.description,
@@ -92,6 +93,9 @@ const Home: NextPage = () => {
 
   return (
     <div className="flex justify-center">
+      <Head>
+        <title>Marketplace</title>
+      </Head>
       <div className="px-4" style={{ maxWidth: "1600px" }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
           {nfts?.map((nft, i) => (

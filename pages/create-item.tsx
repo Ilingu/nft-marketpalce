@@ -10,6 +10,7 @@ import { nftaddress, nftmarketaddress } from "../lib/config";
 
 import NFT from "../artifacts/contracts/NFT.sol/NFT.json";
 import Market from "../artifacts/contracts/NFTMarket.sol/NFTMarket.json";
+import Head from "next/head";
 
 const client = ipfsHttpClient({ url: "https://ipfs.infura.io:5001/api/v0" });
 
@@ -79,6 +80,9 @@ const CreateItemPage: NextPage = () => {
 
   return (
     <div className="flex justify-center">
+      <Head>
+        <title>Create (mint) a new NFT</title>
+      </Head>
       <div className="w-1/2 flex flex-col pb-12">
         <input
           type="text"
