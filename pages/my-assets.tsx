@@ -9,8 +9,7 @@ import { nftaddress, nftmarketaddress } from "../lib/config";
 
 import NFT from "../artifacts/contracts/NFT.sol/NFT.json";
 import Market from "../artifacts/contracts/NFTMarket.sol/NFTMarket.json";
-
-// Type
+// Types
 import { LoadingStateType } from "../lib/types/types";
 import {
   AssetMetaDataRes,
@@ -18,8 +17,7 @@ import {
   UINFTShape,
 } from "../lib/types/interfaces";
 
-/* COMPONENT */
-const Home: NextPage = () => {
+const MyAssetPage: NextPage = () => {
   const [nfts, setNfts] = useState<UINFTShape[]>();
   const [loadingState, setLoadingState] =
     useState<LoadingStateType>("not-loaded");
@@ -30,17 +28,20 @@ const Home: NextPage = () => {
 
   async function loadNFTs() {
     try {
-      const provider = new ethers.providers.JsonRpcProvider();
-      if (!provider) return;
+      const web3Modal = new Web3Modal();
+      const connection = await web3Modal.connect();
+      const provider = new ethers.providers.Web3Provider(connection);
 
-      const tokenContract = new ethers.Contract(nftaddress, NFT.abi, provider);
+      const signer = provider.getSigner();
+
       const marketContract = new ethers.Contract(
         nftmarketaddress,
         Market.abi,
-        provider
+        signer
       );
+      const tokenContract = new ethers.Contract(nftaddress, NFT.abi, signer);
 
-      const data: NFTShape[] = await marketContract.fetchMarketItems();
+      const data: NFTShape[] = await marketContract.fetchMyNFTs();
       const items = await Promise.all<Promise<UINFTShape>[]>(
         data.map(async (i) => {
           const tokenUri = await tokenContract.tokenURI(i.tokenId);
@@ -48,8 +49,6 @@ const Home: NextPage = () => {
           const price = parseInt(
             ethers.utils.formatUnits(i.price.toString(), "ether")
           );
-  console.log(tokenUri);
-
           const item: UINFTShape = {
             description: meta.data.description,
             image: meta.data.image,
@@ -70,25 +69,8 @@ const Home: NextPage = () => {
     }
   }
 
-  async function buyNft({ price, tokenId }: UINFTShape) {
-    const web3Modal = new Web3Modal();
-    const connection = await web3Modal.connect();
-    const provider = new ethers.providers.Web3Provider(connection);
-
-    const signer = provider.getSigner();
-    const contract = new ethers.Contract(nftmarketaddress, Market.abi, signer);
-
-    const priceToPay = ethers.utils.parseUnits(price.toString(), "ether");
-
-    const transaction = await contract.createMarketSale(nftaddress, tokenId, {
-      value: priceToPay,
-    });
-    await transaction.wait();
-    loadNFTs();
-  }
-
   if (loadingState === "loaded" && !nfts.length)
-    return <h1 className="px-20 py-10 text-3xl">Not Items in Marketplace</h1>;
+    return <h1 className="px-20 py-10 text-3xl">No purchased NFTs</h1>;
 
   return (
     <div className="flex justify-center">
@@ -104,18 +86,6 @@ const Home: NextPage = () => {
                   <p className="text-gray-500">{nft.description}</p>
                 </div>
               </div>
-
-              <div className="p-4 bg-black">
-                <p className="text-2xl mb-4 font-bold text-white">
-                  {nft.price} MATIC
-                </p>
-                <button
-                  className="w-full bg-pink-500 text-white font-bold py-2 px-12 rounded"
-                  onClick={() => buyNft(nft)}
-                >
-                  Buy
-                </button>
-              </div>
             </div>
           ))}
         </div>
@@ -124,4 +94,4 @@ const Home: NextPage = () => {
   );
 };
 
-export default Home;
+export default MyAssetPage;
